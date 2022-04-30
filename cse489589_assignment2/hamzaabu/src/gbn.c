@@ -1,5 +1,13 @@
 #include "../include/simulator.h"
+#include <vector>
+#include <iostream>
+#include <string.h>
 
+/* Project 2
+ * CSE 589
+ * hamzaabu and muhanned
+ * "We have read and understood the course academic integrity policy"
+ * */
 /* ******************************************************************
  ALTERNATING BIT AND GO-BACK-N NETWORK EMULATOR: VERSION 1.1  J.F.Kurose
 
