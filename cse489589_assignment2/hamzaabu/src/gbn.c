@@ -25,6 +25,15 @@
 
 /* called from layer 5, passed the data to be sent to other side */
 int checksum_init(struct pkt packet);
+int corrupt_packet(pkt packet);
+
+int corrupt_packet(struct pkt packet){
+
+	//Checking for the corruption through packet checksum
+	if(packet.checksum != checksum_init(packet) return true;
+	else return false;
+
+}
 
 int checksum_init(struct pkt packet){
 	
