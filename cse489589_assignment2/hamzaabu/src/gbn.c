@@ -24,8 +24,20 @@
 /********* STUDENTS WRITE THE NEXT SEVEN ROUTINES *********/
 
 /* called from layer 5, passed the data to be sent to other side */
+
+//Data Structure declaration
+int next_seq_num;
+int base;
+int exp_seq_num = 0;
+struct messages{
+	struct msg message;
+	struct message_queue * next_message;
+}* message_queue;
+
+//Function declaration
 int checksum_init(struct pkt packet);
 int corrupt_packet(pkt packet);
+void send_data();
 
 int corrupt_packet(struct pkt packet){
 
@@ -57,27 +69,38 @@ int checksum_init(struct pkt packet){
 void A_output(message)
   struct msg message;
 {
-
+	//Add the message to the message queue
+	message_queue.push_back(message);
+	
+	//Send the data 
+	send_data();
+	
 }
 
 /* called from layer 3, when a packet arrives for layer 4 */
 void A_input(packet)
   struct pkt packet;
 {
-
+	
 }
 
 /* called when A's timer goes off */
 void A_timerinterrupt()
 {
-
+	
+	//Assign the next sequence from the beginning
+	next_seq_num = base;
+	
+	//Send the data again
+	send_data();
 }  
 
 /* the following routine will be called once (only) before any other */
 /* entity A routines are called. You can use it to do any initialization */
 void A_init()
 {
-
+	base = 0;
+	next_seq_num = 0;
 }
 
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
@@ -93,5 +116,5 @@ void B_input(packet)
 /* entity B routines are called. You can use it to do any initialization */
 void B_init()
 {
-
+	exp_seq_num = 0;
 }

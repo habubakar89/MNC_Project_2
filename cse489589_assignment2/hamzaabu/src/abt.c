@@ -25,14 +25,30 @@
 /********* STUDENTS WRITE THE NEXT SIX ROUTINES *********/
 
 /* called from layer 5, passed the data to be sent to other side */
-int checksum_init(struct pkt packet);
 
+/*Define A and B + Data Structures needed*/
+#define A 0
+#define B 1
+#define waitingAck 0
+#define available 1
+
+int stateA;
+
+struct bufferQueue {
+	struct msg message;
+	struct bufferQueue * nextMessage; 
+} messages;
+
+/*Declare the functions*/
+int checksum_init(struct pkt packet);
+void send_msg();
+
+/*Declare the functions*/
 int checksum_init(struct pkt packet){
-	
+	/*Function to create a checksum*/
 	int checksum = 0;
-	int data = 20;
-	
-	//Check if the payload is Null
+		
+	//Check if the payload is Null, it is then an acknowledgement
 	if(packet.payload == NULL) return 0;
 
 	int seq_num = packet.seqnum;
@@ -44,6 +60,38 @@ int checksum_init(struct pkt packet){
 	for(int n = 0 ; n < data ; n++) checksum += (unsigned char) packet.payload[i];
 
 	return checksum;
+
+}
+
+bool isCorrupt(pkt packet){
+	/*Function to check if the given packet is corrupt*/
+	if(packet.checksum != checksum_init(packet) return true;
+	else return false;
+}
+
+int send_msg(){
+
+	if(messages){
+		/*The next packet*/
+		struct packet temp;
+		temp.seqnum = seqNum_A;
+		temp.acknum = seqNum_A;
+	
+		/*Allot the soace*/
+		memcpy(temp.payload,(messages -> message).data,sizeof((messages.message).data));
+
+		/*Create the checksum*/
+		temp.checksum = checksum_init(temp);
+		
+		/*Send the packet to Layer 3*/		
+		tolayer3(A,temp);
+
+		/*Change the state of A to waiting*/
+		stateA = waitingAck;
+		
+		/*Start the timer for A*/
+		starttimer(A,TIMEOUT);
+	}	
 
 }
 
@@ -63,14 +111,15 @@ void A_input(packet)
 /* called when A's timer goes off */
 void A_timerinterrupt()
 {
-
+	/*We will only resend the last message in case of the timer interrupt*/
+	send_msg();
 }  
 
 /* the following routine will be called once (only) before any other */
 /* entity A routines are called. You can use it to do any initialization */
 void A_init()
 {
-
+	
 }
 
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
