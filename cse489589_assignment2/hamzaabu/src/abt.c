@@ -124,7 +124,15 @@ void A_input(packet)
   struct pkt packet;
 {
 	/*We donot have to proceed in case the checksum does not match*/
-	if(isCorrupt(packet) || 
+	if(isCorrupt(packet) || packet.acknum != seqNumA) return;
+	
+	seqNumA = (seqNumA + 1) % 2;
+	stoptimer(A);
+	
+	if(messages){
+		messages = messages -> nextMessage;
+		send_msg();
+	}
 }
 
 /* called when A's timer goes off */
@@ -138,7 +146,11 @@ void A_timerinterrupt()
 /* entity A routines are called. You can use it to do any initialization */
 void A_init()
 {
-	
+	stateA = available;
+	messages = NULL;
+	seqNumA= 0;
+	ackNumB = 0;
+	timeout = 50;	
 }
 
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
@@ -147,7 +159,7 @@ void A_init()
 void B_input(packet)
   struct pkt packet;
 {
-
+	
 }
 
 /* the following routine will be called once (only) before any other */
