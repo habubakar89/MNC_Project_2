@@ -6,7 +6,7 @@
 /* Project 2
  * CSE 589
  * hamzaabu and muhanned
- *  "We have read and understood the course academix integrity policy"
+ *  "We have read and understood the course academic integrity policy"
  * */
 
 /* ******************************************************************
@@ -51,7 +51,7 @@ int checksum_init(struct pkt packet){
 	/*Function to create a checksum*/
 	int checksum = 0;
 		
-	//Check if the payload is Null, it is then an acknowledgement
+	/*Check if the payload is Null, it is then an acknowledgement*/
 	if(packet.payload == NULL) return 0;
 
 	int seq_num = packet.seqnum;
@@ -123,7 +123,7 @@ void A_output(message)
 void A_input(packet)
   struct pkt packet;
 {
-	/*We donot have to proceed in case the checksum does not match*/
+	/*We do not have to proceed in case the checksum does not match*/
 	if(isCorrupt(packet) || packet.acknum != seqNumA) return;
 	
 	seqNumA = (seqNumA + 1) % 2;
@@ -159,7 +159,25 @@ void A_init()
 void B_input(packet)
   struct pkt packet;
 {
+	/*Re-send the last acknowledgement in case the packet is corrupted*/
+	if(isCorrupt(packet) || packet.seqnum != ackNumB){
+		struct pkt acknowledgement;
+		acknowledgement.seqnum = (ackNumB + 1 ) % 2;
+		acknowledgement.acknum = (ackNumB + 1 ) % 2;
+		acknowledgement.checksum = checksum_init(acknowledgement);
+		tolayer3(B,acknowledgement);
+		return;
+	}	
+
+	tolayer5(packet.payload);
 	
+	/*Follow with the acknowldgement*/
+	struct pkt acknowledgement;
+	acknowldgement.seqnum = packet.seqnum;
+	acknowledgement.acknum = packet.seqnum;
+	acknowledgement.checksum = checksum_init(acknowledgement);
+	tolayer3(B,acknowledgement);
+	ackNumB = (packet.seqnum + 1) % 2;
 }
 
 /* the following routine will be called once (only) before any other */
