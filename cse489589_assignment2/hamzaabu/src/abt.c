@@ -33,6 +33,9 @@
 #define available 1
 
 int stateA;
+int seqNumA;
+int ackNumB;
+int timeout;
 
 struct bufferQueue {
 	struct msg message;
@@ -78,7 +81,7 @@ int send_msg(){
 		temp.acknum = seqNum_A;
 	
 		/*Allot the soace*/
-		memcpy(temp.payload,(messages -> message).data,sizeof((messages.message).data));
+		memcpy(temp.payload,(messages -> message).data,sizeof((messages -> message).data));
 
 		/*Create the checksum*/
 		temp.checksum = checksum_init(temp);
@@ -98,6 +101,21 @@ int send_msg(){
 void A_output(message)
   struct msg message;
 {
+	struct bufferQueue * temp = messages;
+	if(temp){
+		while(temp -> nextMessage != NULL) temp = temp -> nextMessage;
+		temp -> nextMessage = malloc(sizeof(struct bufferQueue));
+		temp -> nextMessage -> message = message;
+		temp -> nextMessage -> nextMessage = NULL;
+	}	
+	else{
+		temp -> nextMessage = malloc(sizeof(struct bufferQueue));
+		temp -> nextMessage -> message = message;
+		temp -> nextMessage -> nextMessage = NULL;
+	}
+	
+	if(stateA == waitingAck) return;
+	send_msg();	
 
 }
 
@@ -105,7 +123,8 @@ void A_output(message)
 void A_input(packet)
   struct pkt packet;
 {
-
+	/*We donot have to proceed in case the checksum does not match*/
+	if(isCorrupt(packet) || 
 }
 
 /* called when A's timer goes off */
