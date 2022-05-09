@@ -1,7 +1,7 @@
 #include "../include/simulator.h"
-#include <vector>
-#include <iostream.h>
-#include <string.h>
+//#include <vector>
+//#include <iostream.h>
+//#include <string.h>
 
 /* Project 2
  * CSE 589
@@ -24,7 +24,7 @@
 /********* STUDENTS WRITE THE NEXT SEVEN ROUTINES *********/
 
 /* called from layer 5, passed the data to be sent to other side */
-int checksum_init(struct pkt packet);
+/*int checksum_init(struct pkt packet);
 
 int checksum_init(struct pck packet){
 
@@ -44,7 +44,7 @@ int checksum_init(struct pck packet){
 
 	return checksum;
 }
-
+*/
 void A_output(message)
   struct msg message;
 {

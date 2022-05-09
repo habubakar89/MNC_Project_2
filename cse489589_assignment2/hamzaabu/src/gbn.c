@@ -1,7 +1,7 @@
 #include "../include/simulator.h"
-#include <vector>
-#include <iostream>
-#include <string.h>
+//#include <vector>
+//#include <iostream>
+//#include <string.h>
 
 /* Project 2
  * CSE 589
@@ -26,7 +26,7 @@
 /* called from layer 5, passed the data to be sent to other side */
 
 //Data Structure declaration
-int next_seq_num;
+/*int next_seq_num;
 int base;
 int exp_seq_num = 0;
 struct messages{
@@ -65,15 +65,15 @@ int checksum_init(struct pkt packet){
 
 	return checksum;
 
-}	
+}*/	
 void A_output(message)
   struct msg message;
 {
 	//Add the message to the message queue
-	message_queue.push_back(message);
+//	message_queue.push_back(message);
 	
 	//Send the data 
-	send_data();
+//	send_data();
 	
 }
 
@@ -89,18 +89,18 @@ void A_timerinterrupt()
 {
 	
 	//Assign the next sequence from the beginning
-	next_seq_num = base;
+//	next_seq_num = base;
 	
 	//Send the data again
-	send_data();
+//	send_data();
 }  
 
 /* the following routine will be called once (only) before any other */
 /* entity A routines are called. You can use it to do any initialization */
 void A_init()
 {
-	base = 0;
-	next_seq_num = 0;
+//	base = 0;
+//	next_seq_num = 0;
 }
 
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
@@ -116,5 +116,5 @@ void B_input(packet)
 /* entity B routines are called. You can use it to do any initialization */
 void B_init()
 {
-	exp_seq_num = 0;
+//	exp_seq_num = 0;
 }

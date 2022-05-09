@@ -1,6 +1,6 @@
 #include "../include/simulator.h"
-#include <vector>
-#include <iostream.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* Project 2
@@ -36,15 +36,16 @@ int stateA;
 int seqNumA;
 int ackNumB;
 int timeout;
-
+int data;
 struct bufferQueue {
 	struct msg message;
 	struct bufferQueue * nextMessage; 
-} messages;
+}* messages;
 
 /*Declare the functions*/
 int checksum_init(struct pkt packet);
 void send_msg();
+int isCorrupt(struct pkt packet);
 
 /*Declare the functions*/
 int checksum_init(struct pkt packet){
@@ -60,25 +61,25 @@ int checksum_init(struct pkt packet){
 	checksum += seq_num;
 	checksum += ack_num;
 	
-	for(int n = 0 ; n < data ; n++) checksum += (unsigned char) packet.payload[i];
+	for(int n = 0 ; n < data ; n++) checksum += (unsigned char) packet.payload[n];
 
 	return checksum;
 
 }
 
-bool isCorrupt(pkt packet){
+int isCorrupt(struct pkt packet){
 	/*Function to check if the given packet is corrupt*/
-	if(packet.checksum != checksum_init(packet) return true;
-	else return false;
+	if(packet.checksum != checksum_init(packet)) return 1;
+	else return 0;
 }
 
-int send_msg(){
+void send_msg(){
 
-	if(messages){
+	if(messages != NULL){
 		/*The next packet*/
-		struct packet temp;
-		temp.seqnum = seqNum_A;
-		temp.acknum = seqNum_A;
+		struct pkt temp;
+		temp.seqnum = seqNumA;
+		temp.acknum = seqNumA;
 	
 		/*Allot the soace*/
 		memcpy(temp.payload,(messages -> message).data,sizeof((messages -> message).data));
@@ -93,7 +94,8 @@ int send_msg(){
 		stateA = waitingAck;
 		
 		/*Start the timer for A*/
-		starttimer(A,TIMEOUT);
+		starttimer(A,timeout);
+
 	}	
 
 }
@@ -102,7 +104,7 @@ void A_output(message)
   struct msg message;
 {
 	struct bufferQueue * temp = messages;
-	if(temp){
+	if(temp != NULL){
 		while(temp -> nextMessage != NULL) temp = temp -> nextMessage;
 		temp -> nextMessage = malloc(sizeof(struct bufferQueue));
 		temp -> nextMessage -> message = message;
@@ -128,8 +130,9 @@ void A_input(packet)
 	
 	seqNumA = (seqNumA + 1) % 2;
 	stoptimer(A);
-	
-	if(messages){
+	stateA = available;	
+
+	if(messages != NULL){
 		messages = messages -> nextMessage;
 		send_msg();
 	}
@@ -150,7 +153,8 @@ void A_init()
 	messages = NULL;
 	seqNumA= 0;
 	ackNumB = 0;
-	timeout = 50;	
+	timeout = 50;
+	data = 20;	
 }
 
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
@@ -169,11 +173,11 @@ void B_input(packet)
 		return;
 	}	
 
-	tolayer5(packet.payload);
+	tolayer5(B,packet.payload);
 	
 	/*Follow with the acknowldgement*/
 	struct pkt acknowledgement;
-	acknowldgement.seqnum = packet.seqnum;
+	acknowledgement.seqnum = packet.seqnum;
 	acknowledgement.acknum = packet.seqnum;
 	acknowledgement.checksum = checksum_init(acknowledgement);
 	tolayer3(B,acknowledgement);
