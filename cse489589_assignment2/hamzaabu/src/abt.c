@@ -6,187 +6,157 @@
 /* Project 2
  * CSE 589
  * hamzaabu and muhanned
- *  "We have read and understood the course academic integrity policy"
- * */
+ *  "We have read and understood the academic integrity policy 
+ */
 
 /* ******************************************************************
- ALTERNATING BIT AND GO-BACK-N NETWORK EMULATOR: VERSION 1.1  J.F.Kurose
-
-   This code should be used for PA2, unidirectional data transfer 
-   protocols (from A to B). Network properties:
-   - one way network delay averages five time units (longer if there
-     are other messages in the channel for GBN), but can be larger
-   - packets can be corrupted (either the header or the data portion)
-     or lost, according to user-defined probabilities
-   - packets will be delivered in the order in which they were sent
-     (although some can be lost).
-**********************************************************************/
+ *  ALTERNATING BIT AND GO-BACK-N NETWORK EMULATOR: VERSION 1.1  J.F.Kurose
+ *  This code should be used for PA2, unidirectional data transfer 
+ *  protocols (from A to B). Network properties:
+ *  - one way network delay averages five time units (longer if there
+ *  are other messages in the channel for GBN), but can be larger
+ *  - packets can be corrupted (either the header or the data portion)
+ *  or lost, according to user-defined probabilities
+ *  - packets will be delivered in the order in which they were sent
+ *  (although some can be lost).
+ * **********************************************************************/
 
 /********* STUDENTS WRITE THE NEXT SIX ROUTINES *********/
 
-/* called from layer 5, passed the data to be sent to other side */
-
-/*Define A and B + Data Structures needed*/
+/*Define A and B + The data structures needed*/
 #define A 0
 #define B 1
-#define waitingAck 0
-#define available 1
 
-int stateA;
-int seqNumA;
-int ackNumB;
-int timeout;
-int data;
-struct bufferQueue {
-	struct msg message;
-	struct bufferQueue * nextMessage; 
-}* messages;
+int create_checksum(struct pkt packet);
+void send_next_available_message();
 
-/*Declare the functions*/
-int checksum_init(struct pkt packet);
-void send_msg();
-int isCorrupt(struct pkt packet);
-
-/*Declare the functions*/
-int checksum_init(struct pkt packet){
-	/*Function to create a checksum*/
-	int checksum = 0;
-		
-	/*Check if the payload is Null, it is then an acknowledgement*/
-	if(packet.payload == NULL) return 0;
-
-	int seq_num = packet.seqnum;
-	int ack_num = packet.acknum;
-	
-	checksum += seq_num;
-	checksum += ack_num;
-	
-	for(int n = 0 ; n < data ; n++) checksum += (unsigned char) packet.payload[n];
-
-	return checksum;
-
-}
-
-int isCorrupt(struct pkt packet){
-	/*Function to check if the given packet is corrupt*/
-	if(packet.checksum != checksum_init(packet)) return 1;
-	else return 0;
-}
-
-void send_msg(){
-
-	if(messages != NULL){
-		/*The next packet*/
-		struct pkt temp;
-		temp.seqnum = seqNumA;
-		temp.acknum = seqNumA;
-	
-		/*Allot the soace*/
-		memcpy(temp.payload,(messages -> message).data,sizeof((messages -> message).data));
-
-		/*Create the checksum*/
-		temp.checksum = checksum_init(temp);
-		
-		/*Send the packet to Layer 3*/		
-		tolayer3(A,temp);
-
-		/*Change the state of A to waiting*/
-		stateA = waitingAck;
-		
-		/*Start the timer for A*/
-		starttimer(A,timeout);
-
-	}	
-
-}
-
-void A_output(message)
+struct buffer {
   struct msg message;
-{
-	struct bufferQueue * temp = messages;
-	if(temp != NULL){
-		while(temp -> nextMessage != NULL) temp = temp -> nextMessage;
-		temp -> nextMessage = malloc(sizeof(struct bufferQueue));
-		temp -> nextMessage -> message = message;
-		temp -> nextMessage -> nextMessage = NULL;
-	}	
-	else{
-		temp -> nextMessage = malloc(sizeof(struct bufferQueue));
-		temp -> nextMessage -> message = message;
-		temp -> nextMessage -> nextMessage = NULL;
-	}
-	
-	if(stateA == waitingAck) return;
-	send_msg();	
+  struct buffer * next_message;
+}* buffered_messages;
 
+enum host_states {
+  waiting_for_acknowledgment,
+  available
+};
+
+enum host_states state_A = available;
+int seqnum_A;
+int acknum_B;
+int TIMEOUT;
+
+int create_checksum(struct pkt packet) {
+  int checksum = 0;
+  
+  if(packet.payload == NULL) return checksum;
+  int seqNum = packet.seqnum;
+  int ackNum = packet.acknum;	
+
+  checksum += seqNum;
+  checksum += ackNum;
+ 
+  for(int n = 0; n < 20; n++) checksum += (unsigned char) packet.payload[n];
+ 
+  return checksum;
 }
+  
+void send_next_available_message() {
 
+if(buffered_messages != NULL) {
+ struct pkt next_packet;
+ next_packet.seqnum = seqnum_A;
+ next_packet.acknum = seqnum_A;
+ memcpy(next_packet.payload, (buffered_messages -> message).data, sizeof((buffered_messages -> message).data));
+ next_packet.checksum = create_checksum(next_packet);
+ tolayer3(A, next_packet);
+ state_A = waiting_for_acknowledgment;
+ starttimer(A, TIMEOUT);
+ }
+} 
+
+  
+  
+void A_output(message)
+struct msg message; {
+	struct buffer * temp = buffered_messages;
+        if (temp != NULL) {
+   	     while(temp -> next_message != NULL) temp = temp -> next_message;
+    
+             temp -> next_message = malloc(sizeof(struct buffer));
+     	     temp -> next_message -> message = message;
+       	     temp -> next_message -> next_message = NULL;
+        } else {
+      	     buffered_messages = malloc(sizeof(struct buffer));
+   	     buffered_messages -> message = message;
+             buffered_messages -> next_message = NULL;
+        }
+        if (state_A == waiting_for_acknowledgment) return;
+        send_next_available_message();
+}
+  
 /* called from layer 3, when a packet arrives for layer 4 */
 void A_input(packet)
-  struct pkt packet;
-{
-	/*We do not have to proceed in case the checksum does not match*/
-	if(isCorrupt(packet) || packet.acknum != seqNumA) return;
-	
-	seqNumA = (seqNumA + 1) % 2;
-	stoptimer(A);
-	stateA = available;	
-
-	if(messages != NULL){
-		messages = messages -> nextMessage;
-		send_msg();
-	}
+struct pkt packet; {
+// Ack received
+	int checksum = create_checksum(packet);
+        if (packet.checksum != checksum || packet.acknum != seqnum_A) return;
+       
+        seqnum_A = (seqnum_A + 1) % 2;
+        stoptimer(A);
+        state_A = available;
+       
+        if (buffered_messages != NULL) {
+ 	      buffered_messages = buffered_messages -> next_message;
+              send_next_available_message();
+           }
 }
+  
 
-/* called when A's timer goes off */
-void A_timerinterrupt()
-{
-	/*We will only resend the last message in case of the timer interrupt*/
-	send_msg();
-}  
-
-/* the following routine will be called once (only) before any other */
+void A_timerinterrupt() {
+	send_next_available_message();
+        }
+  
+ /* the following routine will be called once (only) before any other */
 /* entity A routines are called. You can use it to do any initialization */
-void A_init()
-{
-	stateA = available;
-	messages = NULL;
-	seqNumA= 0;
-	ackNumB = 0;
-	timeout = 50;
-	data = 20;	
-}
-
-/* Note that with simplex transfer from a-to-B, there is no B_output() */
-
-/* called from layer 3, when a packet arrives for layer 4 at B*/
-void B_input(packet)
-  struct pkt packet;
-{
-	/*Re-send the last acknowledgement in case the packet is corrupted*/
-	if(isCorrupt(packet) || packet.seqnum != ackNumB){
-		struct pkt acknowledgement;
-		acknowledgement.seqnum = (ackNumB + 1 ) % 2;
-		acknowledgement.acknum = (ackNumB + 1 ) % 2;
-		acknowledgement.checksum = checksum_init(acknowledgement);
-		tolayer3(B,acknowledgement);
-		return;
-	}	
-
-	tolayer5(B,packet.payload);
-	
-	/*Follow with the acknowldgement*/
-	struct pkt acknowledgement;
-	acknowledgement.seqnum = packet.seqnum;
-	acknowledgement.acknum = packet.seqnum;
-	acknowledgement.checksum = checksum_init(acknowledgement);
-	tolayer3(B,acknowledgement);
-	ackNumB = (packet.seqnum + 1) % 2;
-}
-
-/* the following routine will be called once (only) before any other */
-/* entity B routines are called. You can use it to do any initialization */
-void B_init()
-{
-
-}
+void A_init() {
+	state_A = available;
+        buffered_messages = NULL;
+        seqnum_A = 0;
+        acknum_B = 0;
+                                                                                                                                                                     TIMEOUT = 50;
+                                                                                                                                                                     }
+  
+                                                                                                                                                                     /* Note that with simplex transfer from a-to-B, there is no B_output() */
+  
+                                                                                                                                                                     /* called from layer 3, when a packet arrives for layer 4 at B*/
+                                                                                                                                                                     void B_input(packet)
+                                                                                                                                                                     struct pkt packet; {
+                                                                                                                                                                       // Check if corrupted or wrong packet
+                                                                                                                                                                         int checksum = create_checksum(packet);
+                                                                                                                                                                           if (packet.checksum != checksum || packet.seqnum != acknum_B) {
+                                                                                                                                                                               // Resend the last ack
+                                                                                                                                                                                   struct pkt ack;
+                                                                                                                                                                                       ack.seqnum = (acknum_B + 1) % 2;
+                                                                                                                                                                                           ack.acknum = (acknum_B + 1) % 2;
+                                                                                                                                                                                               ack.checksum = create_checksum(ack);
+                                                                                                                                                                                                   tolayer3(B, ack);
+                                                                                                                                                                                                       return;
+                                                                                                                                                                                                         }
+                                                                                                                                                                                                           // Send data to layer 3
+                                                                                                                                                                                                             tolayer5(B, packet.payload);
+  
+                                                                                                                                                                                                               // Send ack
+                                                                                                                                                                                                                 struct pkt ack;
+                                                                                                                                                                                                                  ack.seqnum = packet.seqnum;
+                                                                                                                                                                                                                     ack.acknum = packet.seqnum;
+                                                                                                                                                                                                                       // char empty[] = "";
+                                                                                                                                                                                                                         // memcpy(ack.payload, empty, sizeof(empty));
+  
+                                                                                                                                                                                                                           ack.checksum = create_checksum(ack);
+                                                                                                                                                                                                                             tolayer3(B, ack);
+                                                                                                                                                                                                                               acknum_B = (packet.seqnum + 1) % 2;
+                                                                                                                                                                                                                               }
+  
+                                                                                                                                                                                                                               /* the following routine will be called once (only) before any other */
+                                                                                                                                                                                                                               /* entity B routines are called. You can use it to do any initialization */
+                                                                                                                                                                                                                             void B_init() {}
