@@ -123,34 +123,33 @@ void A_init() {
         buffered_messages = NULL;
         seqnum_A = 0;
         acknum_B = 0;
-                                                                                                                                                                     TIMEOUT = 50;
-                                                                                                                                                                     }
+        TIMEOUT = 50;
+        }
+ 
+/* Note that with simplex transfer from a-to-B, there is no B_output() */
   
-                                                                                                                                                                     /* Note that with simplex transfer from a-to-B, there is no B_output() */
-  
-                                                                                                                                                                     /* called from layer 3, when a packet arrives for layer 4 at B*/
-                                                                                                                                                                     void B_input(packet)
-                                                                                                                                                                     struct pkt packet; {
-                                                                                                                                                                       // Check if corrupted or wrong packet
-                                                                                                                                                                         int checksum = create_checksum(packet);
-                                                                                                                                                                           if (packet.checksum != checksum || packet.seqnum != acknum_B) {
-                                                                                                                                                                               // Resend the last ack
-                                                                                                                                                                                   struct pkt ack;
-                                                                                                                                                                                       ack.seqnum = (acknum_B + 1) % 2;
-                                                                                                                                                                                           ack.acknum = (acknum_B + 1) % 2;
-                                                                                                                                                                                               ack.checksum = create_checksum(ack);
-                                                                                                                                                                                                   tolayer3(B, ack);
-                                                                                                                                                                                                       return;
-                                                                                                                                                                                                         }
-                                                                                                                                                                                                           // Send data to layer 3
-                                                                                                                                                                                                             tolayer5(B, packet.payload);
-  
-                                                                                                                                                                                                               // Send ack
-                                                                                                                                                                                                                 struct pkt ack;
-                                                                                                                                                                                                                  ack.seqnum = packet.seqnum;
-                                                                                                                                                                                                                     ack.acknum = packet.seqnum;
-                                                                                                                                                                                                                       // char empty[] = "";
-                                                                                                                                                                                                                         // memcpy(ack.payload, empty, sizeof(empty));
+/* called from layer 3, when a packet arrives for layer 4 at B*/
+void B_input(packet)
+struct pkt packet; {
+	// Check if corrupted or wrong packet
+	int checksum = create_checksum(packet);
+	if (packet.checksum != checksum || packet.seqnum != acknum_B) {
+        // Resend the last ack
+        struct pkt ack;
+        ack.seqnum = (acknum_B + 1) % 2;
+        ack.acknum = (acknum_B + 1) % 2;
+        ack.checksum = create_checksum(ack);
+        tolayer3(B, ack);
+        return;
+        }
+        // Send data to layer 3
+         tolayer5(B, packet.payload);
+       // Send ack
+         struct pkt ack;
+         ack.seqnum = packet.seqnum;
+         ack.acknum = packet.seqnum;
+        // char empty[] = "";
+                                                                                                                                                                                                                        // memcpy(ack.payload, empty, sizeof(empty));
   
                                                                                                                                                                                                                            ack.checksum = create_checksum(ack);
                                                                                                                                                                                                                              tolayer3(B, ack);
