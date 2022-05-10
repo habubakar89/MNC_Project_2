@@ -74,16 +74,22 @@ void A_output(message)
   struct msg message;
 {
 	if(stateA){
-	        buffer[j++] = message;
-	       	return;
+	        buffer[j] = message;
+		j++;            
+		return;
 	}
 
 	struct pkt temp;
 	memset(&temp,0,sizeof(temp));
+	temp.acknum = seqNum;
 	
-	temp.checksum = checksum_init(temp);
+	//
+	temp.checksum = seqNum + temp.acknum;
+	temp.seqnum = seqNum;
+	for(int i = 0 ; i < 20 ; i++) temp.checksum += (int) message.data[i];
+	//
 	stateA = 1;
-	strcpy(temp.payload,message.data);
+	strncpy(temp.payload,message.data,20);
 	starttimer(A,timeout);
 
 	tolayer3(A,temp);
@@ -107,7 +113,7 @@ void A_input(packet)
 
 		temp.checksum = checksum_init(temp);
 		stateA = 1;
-		strcpy(temp.payload,messageTemp.data);
+		strncpy(temp.payload,messageTemp.data,20);
 		starttimer(A,timeout);
 		tolayer3(A,temp);
 		sample = temp;
@@ -150,8 +156,11 @@ void B_input(packet)
 	//Check for the checksum and packet corruption
 	if(isValidPacket(packet)){
 		struct pkt temp;
+		memset(&temp,0,sizeof(temp));
 		temp.acknum = packet.seqnum;
-		temp.checksum = checksum_init(temp);
+		//temp.checksum = checksum_init(temp);
+		temp.checksum = temp.seqnum + temp.acknum;
+		for(int n = 0 ; n < 20 ; n++) temp.checksum += (int) temp.payload[n];
 		tolayer3(B,temp);
 		
 		if(packet.seqnum == stateB){

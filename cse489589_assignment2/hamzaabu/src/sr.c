@@ -25,6 +25,24 @@
 
 /********* STUDENTS WRITE THE NEXT SEVEN ROUTINES *********/
 
+/*Variable(s) and data structure(s) declaration*/
+#define A 0
+#define B 1
+
+int timeout;
+int seqNum;
+int i,j;
+int min;
+int winSize;
+int packEx;
+int timer[4000];
+int ackSend[4000];
+float isValidBuffer[4000];
+
+struct pkt bufferSend[4000];
+struct pkt bufferReach[4000];
+struct msg buffer[4000];
+
 /*Function Definition*/
 int checksum_init(struct pkt packet);
 
@@ -43,7 +61,7 @@ int checksum_init(struct pkt packet){
 	checksum += seq_num;
 	checksum += ack_num;
 					
-	for(int n = 0 ; n < data ; n++) checksum += (unsigned char) packet.payload[n];
+	for(int n = 0 ; n < data ; n++) checksum += (int) packet.payload[n];
 
 	return checksum;
 
@@ -67,14 +85,25 @@ void A_input(packet)
 /* called when A's timer goes off */
 void A_timerinterrupt()
 {
-
+	
 }  
 
 /* the following routine will be called once (only) before any other */
 /* entity A routines are called. You can use it to do any initialization */
 void A_init()
 {
-  
+ 	winSize = getwinsize();
+	timeout = 40;
+	i = 0;
+	j = 0;
+	min = 0;
+	seqNum = 0;
+	
+	memset(&buffer,0,sizeof(buffer));	
+	memset(&timer,0,sizeof(timer));
+	memset(&ackSend,0,sizeof(ackSend));
+	memset(&bufferSend ,0,sizeof(bufferSend));
+	return;
 }
 
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
@@ -83,6 +112,36 @@ void A_init()
 void B_input(packet)
   struct pkt packet;
 {
+	int seqNumPacket = packet.seqnum;
+	int checkSum = checksum_init(packet);
+	
+	//Chcck for possible corruption, overflow
+	if(checkSum != packet.checksum || seqNumPacket >= packEx + winSize || seqNumPacket < packEx - winSize) return;
+	 	
+	struct pkt temp;
+	memset(&temp,0,sizeof(temp));
+	
+	temp.seqnum = packet.seqnum;
+	temp.checksum = checksum_init(temp);
+	tolayer3(B,temp);
+
+	if(packet.seqnum != packEx){
+		bufferReach[packet.seqnum] = packet;
+		isValidBuffer[packet.seqnum] = 1;
+	}
+	else{
+		int temp = packEx + winSize;
+		tolayer5(B,packet.payload);
+		packEx++;
+	
+		for(int n = packEx ; n < temp ; n++){
+		
+			if(isValidBuffer[n] == 0) break;
+			tolayer5(B,bufferReach[n].payload);
+			packEx++;
+		}
+	}
+	return;
 
 }
 
@@ -90,5 +149,11 @@ void B_input(packet)
 /* entity B routines are called. You can use it to do any initialization */
 void B_init()
 {
-
+	winSize = getwinsize();
+	packEx  = 0;
+	timeout = 40;
+	
+	memset(&bufferReach,0,sizeof(bufferReach));
+	memset(&isValidBuffer,0,sizeof(isValidBuffer));
+	return;	
 }
