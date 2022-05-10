@@ -31,9 +31,12 @@
 
 int i,j;
 struct msg buffer[1000];
+struct pkt sample;
 int timeout;
 int seqNum;
 int ackNum;
+int stateA;
+int stateB;
  
 /*Function Drfinitions*/
 int checksum_init(struct pkt packet);
@@ -70,27 +73,72 @@ int checksum_init(struct pkt packet){
 void A_output(message)
   struct msg message;
 {
+	if(stateA){
+	        buffer[j++] = message;
+	       	return;
+	}
+
+	struct pkt temp;
+	memset(&temp,0,sizeof(temp));
 	
+	temp.checksum = checksum_init(temp);
+	stateA = 1;
+	strcpy(temp.payload,message.data);
+	starttimer(A,timeout);
+
+	tolayer3(A,temp);
+	sample = temp;
+	return;	
 }
 
 /* called from layer 3, when a packet arrives for layer 4 */
 void A_input(packet)
   struct pkt packet;
 {
+	if(!isValidPacket(packet) || seqNum != packet.acknum) return;
+	
+	stoptimer(A);
+	seqNum = !seqNum;
+	
+	if(i<j){
+		struct msg messageTemp = buffer[i];
+		struct pkt temp;
+		memset(&temp,0,sizeof(temp));
 
+		temp.checksum = checksum_init(temp);
+		stateA = 1;
+		strcpy(temp.payload,messageTemp.data);
+		starttimer(A,timeout);
+		tolayer3(A,temp);
+		sample = temp;
+		i++;
+	}
+        else stateA = 0;	
+
+	return;
+	
+	
 }
 
 /* called when A's timer goes off */
 void A_timerinterrupt()
 {
-
+	tolayer3(A,sample);
+	starttimer(A,timeout);
 }  
 
 /* the following routine will be called once (only) before any other */
 /* entity A routines are called. You can use it to do any initialization */
 void A_init()
 {
-		
+	timeout = 15;
+	stateA = 0;	
+	seqNum = 0;
+	i = 0;
+	j = 0;
+	memset(&sample,0,sizeof(sample));
+	memset(&buffer,0,sizeof(buffer));	
+	return;
 }
 
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
@@ -99,12 +147,26 @@ void A_init()
 void B_input(packet)
   struct pkt packet;
 {
-
+	//Check for the checksum and packet corruption
+	if(isValidPacket(packet)){
+		struct pkt temp;
+		temp.acknum = packet.seqnum;
+		temp.checksum = checksum_init(temp);
+		tolayer3(B,temp);
+		
+		if(packet.seqnum == stateB){
+			tolayer5(B,packet.payload);
+			stateB = !stateB;
+		} 
+	} 	
+	return;
+	 
 }
 
 /* the following routine will be called once (only) before any other */
 /* entity B routines are called. You can use it to do any initialization */
 void B_init()
 {
-
+	stateB = 0;
+	return;
 }
