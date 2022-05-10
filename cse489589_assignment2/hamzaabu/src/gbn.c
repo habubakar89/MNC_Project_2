@@ -25,6 +25,30 @@
 
 /********* STUDENTS WRITE THE NEXT SEVEN ROUTINES *********/
 
+/*Function Definition*/
+int checksum_init(struct pkt packet);
+
+/*Function Declaration*/
+int checksum_init(struct pkt packet){
+	
+	int checksum = 0;
+	int data = 20;
+	
+	//Check if the payload is Null
+	if(packet.payload == NULL) return 0;
+	
+	int seq_num = packet.seqnum;
+	int ack_num = packet.acknum;
+				
+	checksum += seq_num;
+	checksum += ack_num;
+						
+	for(int n = 0 ; n < data ; n++) checksum += (unsigned char) packet.payload[n];
+
+	return checksum;
+	
+	}
+
 /* called from layer 5, passed the data to be sent to other side */
 void A_output(message)
   struct msg message;
