@@ -1,4 +1,14 @@
 #include "../include/simulator.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/*
+ * Project 2 - Reliable Transport Protocols
+ * CSE 589
+ * hamzaabu and muhanned
+ * "We have read and undrstood the academic integrity policy"
+ */ 
 
 /* ******************************************************************
  ALTERNATING BIT AND GO-BACK-N NETWORK EMULATOR: VERSION 1.1  J.F.Kurose
