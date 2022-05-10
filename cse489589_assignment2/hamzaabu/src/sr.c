@@ -106,6 +106,39 @@ void A_input(packet)
 	int ackNumPacket = packet.acknum;
 	int tempChecksum = checksum_init(packet);
 	if(tempChecksum != packet.checksum || ackNumPacket < min || ackNumPacket >= winSize) return; 
+	
+	timer[ackNumPacket] = 0;
+	ackSend[ackNumPacket] = 1;
+
+	if(ackNumPacket == min){
+		for(int n = min ; n < seqNum ; n++){
+			if(ackSend[n] != 1) break;
+			min++;
+		}
+	}
+	
+	while(i < j && seqNum < min + winSize){
+		struct pkt temp;
+		memset(&temp,0,sizeof(temp));
+		struct msg message = buffer[i];
+		temp.checksum = temp.seqnum + seqNum;
+		temp.seqnum = seqNum;
+		for(int n = 0 ; n < 20 ; n++) temp.checksum += (int) message.data[n];
+
+		strcpy(temp.payload,message.data);
+		tolayer3(A,temp);
+
+		if(min == seqNum) starttimer(A,timeout);
+		bufferSend[seqNum] = temp;
+		timer[seqNum] = timeout + get_sim_time();
+
+		i++;
+		seqNum++;
+	}	
+
+	if(seqNum == min) stoptimer(A);
+	return;
+
 }
 
 /* called when A's timer goes off */
