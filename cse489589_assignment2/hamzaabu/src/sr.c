@@ -145,18 +145,23 @@ void A_input(packet)
 void A_timerinterrupt()
 {
 	float time = timeout + get_sim_time();
-	for(int n = 0 ; n < seqNum ; n++){
-		if(timer[n] < time && ackSend[n] == 0) min = timer[n];
-	} 		
-	float simTime = get_sim_time(); 
 	for(int n = min ; n < seqNum ; n++){
-		if(ackSend[n] == 0 && simTime == timer[n]){
+		if(timer[n] < time && ackSend[n] == 0) time = timer[n];
+	} 		
+	//float simTime = get_sim_time(); 
+	for(int n = min ; n < seqNum ; n++){
+		if(ackSend[n] == 0 && get_sim_time() == timer[n]){
 			tolayer3(A,bufferSend[n]);
-			timer[i] = simTime + timeout;
+			timer[i] = get_sim_time() + timeout;
 			break;
 		}
 	}
-	if(time > 0) starttimer(A,time - simTime); 
+	float time1 = timeout + get_sim_time();
+	for(int n = 0 ; n < seqNum ; n++){
+		if(timer[n] < time1 && ackSend[n] == 0) time1 = timer[n];
+	} 
+
+	if(time1 > 0) starttimer(A,time1 - get_sim_time()); 
 	return;
 } 
 
@@ -193,7 +198,7 @@ void B_input(packet)
 	struct pkt temp;
 	memset(&temp,0,sizeof(temp));
 	
-	temp.seqnum = packet.seqnum;
+	temp.acknum = packet.seqnum;
 	temp.checksum = checksum_init(temp);
 	tolayer3(B,temp);
 
