@@ -35,7 +35,7 @@ int i,j;
 int min;
 int winSize;
 int packEx;
-int timer[4000];
+float timer[4000];
 int ackSend[4000];
 float isValidBuffer[4000];
 
@@ -45,6 +45,7 @@ struct msg buffer[4000];
 
 /*Function Definition*/
 int checksum_init(struct pkt packet);
+
 
 /*Function Declataion*/
 int checksum_init(struct pkt packet){
@@ -72,21 +73,59 @@ int checksum_init(struct pkt packet){
 void A_output(message)
   struct msg message;
 {
-
+	int temp1 = winSize + min;
+	if(seqNum >= temp1){
+		buffer[j] = message;
+		j++;
+		return;
+	}
+	
+	struct pkt temp;
+	memset(&temp,0,sizeof(temp));
+	temp.seqnum = seqNum;
+	temp.checksum = seqNum + temp.acknum;
+	
+	for(int n = 0 ; n < 20 ; n++) temp.checksum += (int) message.data[n];
+	
+	strcpy(temp.payload,message.data);
+	tolayer3(A,temp);
+	
+	if(seqNum == min) starttimer(A,timeout);
+	
+	bufferSend[seqNum] = temp;
+	timer[seqNum] = timeout + get_sim_time(); 
+	
+	seqNum++;
+	return;
 }
 
 /* called from layer 3, when a packet arrives for layer 4 */
 void A_input(packet)
   struct pkt packet;
 {
-
+	int ackNumPacket = packet.acknum;
+	int tempChecksum = checksum_init(packet);
+	if(tempChecksum != packet.checksum || ackNumPacket < min || ackNumPacket >= winSize) return; 
 }
 
 /* called when A's timer goes off */
 void A_timerinterrupt()
 {
-	
-}  
+	float time = timeout + get_sim_time();
+	for(int n = 0 ; n < seqNum ; n++){
+		if(timer[n] < time && ackSend[n] == 0) min = timer[n];
+	} 		
+	float simTime = get_sim_time(); 
+	for(int n = min ; n < seqNum ; n++){
+		if(ackSend[n] == 0 && simTime == timer[n]){
+			tolayer3(A,bufferSend[n]);
+			timer[i] = simTime + timeout;
+			break;
+		}
+	}
+	if(time > 0) starttimer(A,time - simTime); 
+	return;
+} 
 
 /* the following routine will be called once (only) before any other */
 /* entity A routines are called. You can use it to do any initialization */
