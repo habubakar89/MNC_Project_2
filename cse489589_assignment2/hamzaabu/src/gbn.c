@@ -7,7 +7,7 @@
  * Project 2 - Reliable Transport Protocols
  * CSE 589
  * hamzaabu and muhanned
- * "We have read and undrstood the academic integrity policy"
+ * "We have read and understood the academic integrity policy"
  */ 
 
 /* ******************************************************************

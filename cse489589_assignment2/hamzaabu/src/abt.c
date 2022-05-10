@@ -25,10 +25,26 @@
 
 /********* STUDENTS WRITE THE NEXT SIX ROUTINES *********/
 
+/*Variable(s) and data structure(s) declaration*/
+#define A 0
+#define B 1
+
+int i,j;
+struct msg buffer[1000];
+int timeout;
+int seqNum;
+int ackNum;
+ 
 /*Function Drfinitions*/
 int checksum_init(struct pkt packet);
+int isValidPacket(struct pkt packet);
 
 /*Function Declarations*/
+int isValidPacket(struct pkt packet){
+	if(packet.checksum == checksum_init(packet)) return 1; 	
+	else return 0;
+	}
+
 int checksum_init(struct pkt packet){
 	
 	int checksum = 0;
@@ -54,7 +70,7 @@ int checksum_init(struct pkt packet){
 void A_output(message)
   struct msg message;
 {
-
+	
 }
 
 /* called from layer 3, when a packet arrives for layer 4 */
@@ -74,7 +90,7 @@ void A_timerinterrupt()
 /* entity A routines are called. You can use it to do any initialization */
 void A_init()
 {
-
+		
 }
 
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
