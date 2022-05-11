@@ -30,7 +30,6 @@ struct pkt retransmit[1000]; //Buffer of struct pkt instead of msg because we ne
 int begin;
 int end;
 int base;
-int window_size;
 int seq_num;
 int expected_pkt;
 /*Function Definition*/
@@ -65,9 +64,9 @@ void A_output(message)
 		memset(&packet, 0, sizeof(packet));
 		int packet_checksum = 0;
 		packet.seqnum = seq_num;
+		strncpy(packet.payload, message.data, 20);
 		packet_checksum = checksum_init(packet);
 		packet.checksum = packet_checksum;
-		strcpy(packet.payload, message.data);
 		tolayer3(0, packet);
 		//Note that if we are sending the first packet in the window, then we must start a countdown
 		//as demonstrated by the behavior in the GBN applet found in https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/
@@ -101,9 +100,9 @@ void A_input(packet)
 		memset(&buffered_packet, 0, sizeof(buffered_packet));
 		int packet_checksum = 0;
 		buffered_packet.seqnum = seq_num;
+		strncpy(buffered_packet.payload, buffer[begin].data, 20);
 		packet_checksum = checksum_init(buffered_packet);
 		buffered_packet.checksum = packet_checksum;
-		strcpy(buffered_packet.payload, buffer[begin].data);
 		tolayer3(0, buffered_packet);
 		if (base == seq_num) {
 			starttimer(0, 50);
@@ -140,6 +139,7 @@ void A_init()
 	end = 0;
 	base = 0;
 	seq_num = 0;
+	return;
 }
 
 /* Note that with simplex transfer from a-to-B, there is no B_output() */
@@ -170,6 +170,7 @@ void B_input(packet)
 		ack.checksum = checksum_init(ack);
 		tolayer3(1, ack);
 	}
+	return;
 }
 
 /* the following rouytine will be called once (only) before any other */
