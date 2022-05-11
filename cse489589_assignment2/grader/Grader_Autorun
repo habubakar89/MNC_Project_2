@@ -1,0 +1,63 @@
+declare -A Protocols
+Protocols[0]=sr
+Protocols[1]=gbn
+
+Corruption=0.2
+Messages=1000
+Timer=50
+
+declare -A Exp_1_WindowSizes
+Exp_1_WindowSizes[0]=10
+Exp_1_WindowSizes[1]=50
+
+declare -A Exp_1_LossProbs
+Exp_1_LossProbs[0]=0.1
+Exp_1_LossProbs[1]=0.2
+Exp_1_LossProbs[2]=0.4
+Exp_1_LossProbs[3]=0.6
+Exp_1_LossProbs[4]=0.8
+
+
+declare -A Exp_2_WindowSizes
+Exp_2_WindowSizes[0]=10
+Exp_2_WindowSizes[1]=50
+Exp_2_WindowSizes[2]=100
+Exp_2_WindowSizes[3]=200
+Exp_2_WindowSizes[4]=500
+
+
+declare -A Exp_2_LossProbs
+Exp_2_LossProbs[0]=0.2
+Exp_2_LossProbs[1]=0.5
+Exp_2_LossProbs[2]=0.8
+
+cd /home/csgrad/ashiqmoh/MNC/cse489589_assignment2/grader
+
+# Experiment 1
+#for ((Protocol_Index=0; Protocol_Index<3; Protocol_Index++)) 
+#do
+#  for ((WindowSize_Index=0; WindowSize_Index<2; WindowSize_Index++))
+#  do
+#    for ((LossProbs_Index=0; LossProbs_Index<5; LossProbs_Index++))
+#    do
+#      OutputFileName="../ashiqmoh/Exp_1_"${Protocols[${Protocol_Index}]}_${Exp_1_WindowSizes[${WindowSize_Index}]}_${Exp_1_LossProbs[${LossProbs_Index}]}.csv
+#      ./run_experiments -m ${Messages} -l ${Exp_1_LossProbs[${LossProbs_Index}]} -c ${Corruption} -t ${Timer} -w ${Exp_1_WindowSizes[${WindowSize_Index}]} -p ../ashiqmoh/${Protocols[${Protocol_Index}]} -o ${OutputFileName}
+#    done
+#  done
+#done
+
+
+for ((Protocol_Index=0; Protocol_Index<2; Protocol_Index++)) 
+do
+  for ((WindowSize_Index=0; WindowSize_Index<5; WindowSize_Index++))
+  do
+    for ((LossProbs_Index=0; LossProbs_Index<3; LossProbs_Index++))
+    do
+      OutputFileName="../ashiqmoh/Exp_2_"${Protocols[${Protocol_Index}]}_${Exp_2_WindowSizes[${WindowSize_Index}]}_${Exp_2_LossProbs[${LossProbs_Index}]}.csv
+      ./run_experiments -m ${Messages} -l ${Exp_2_LossProbs[${LossProbs_Index}]} -c ${Corruption} -t ${Timer} -w ${Exp_2_WindowSizes[${WindowSize_Index}]} -p ../ashiqmoh/${Protocols[${Protocol_Index}]} -o ${OutputFileName}
+      echo ${OutputFileName}
+    done
+  done
+done
+
+
