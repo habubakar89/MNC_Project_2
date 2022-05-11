@@ -198,7 +198,7 @@ void B_input(packet)
 	struct pkt temp;
 	memset(&temp,0,sizeof(temp));
 	
-	temp.seqnum = seqNumPacket;
+	temp.acknum = seqNumPacket;
 	temp.checksum = checksum_init(temp);
 	tolayer3(B,temp);
 
@@ -207,11 +207,11 @@ void B_input(packet)
 		isValidBuffer[seqNumPacket] = 1;
 	}
 	else{
-		int temp = packEx + winSize;
+		int temp1 = packEx + winSize;
 		tolayer5(B,packet.payload);
 		packEx++;
 	
-		for(int n = packEx ; n < temp ; n++){
+		for(int n = packEx ; n < temp1 ; n++){
 		
 			if(isValidBuffer[n] == 0) break;
 			tolayer5(B,bufferReach[n].payload);
