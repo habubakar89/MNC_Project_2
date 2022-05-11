@@ -81,7 +81,7 @@ void A_output(message)
 
 	struct pkt temp;
 	memset(&temp,0,sizeof(temp));
-	temp.acknum = seqNum;
+	//temp.acknum = seqNum;
 	
 	//
 	temp.checksum = seqNum + temp.acknum;
@@ -111,7 +111,12 @@ void A_input(packet)
 		struct pkt temp;
 		memset(&temp,0,sizeof(temp));
 
-		temp.checksum = checksum_init(temp);
+
+		//temp.checksum = checksum_init(temp);
+		temp.checksum = seqNum + packet.acknum;
+		temp.seqnum = seqNum;
+		struct msg message = buffer[i];
+		for(int n = 0 ; n < 20 ; n++) temp.checksum += (int) message.data[i];
 		stateA = 1;
 		strncpy(temp.payload,messageTemp.data,20);
 		starttimer(A,timeout);

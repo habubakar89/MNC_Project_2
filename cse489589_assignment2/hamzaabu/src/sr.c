@@ -157,11 +157,11 @@ void A_timerinterrupt()
 		}
 	}
 	float time1 = timeout + get_sim_time();
-	for(int n = 0 ; n < seqNum ; n++){
+	/*1for(int n = min ; n < seqNum ; n++){
 		if(timer[n] < time1 && ackSend[n] == 0) time1 = timer[n];
-	} 
+	} */
 
-	if(time1 > 0) starttimer(A,time1 - get_sim_time()); 
+	if(time > 0) starttimer(A,time - get_sim_time()); 
 	return;
 } 
 
@@ -198,7 +198,7 @@ void B_input(packet)
 	struct pkt temp;
 	memset(&temp,0,sizeof(temp));
 	
-	temp.acknum = packet.seqnum;
+	temp.seqnum = packet.seqnum;
 	temp.checksum = checksum_init(temp);
 	tolayer3(B,temp);
 
