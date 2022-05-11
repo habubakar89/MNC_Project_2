@@ -87,7 +87,7 @@ void A_output(message)
 	
 	for(int n = 0 ; n < 20 ; n++) temp.checksum += (int) message.data[n];
 	
-	strcpy(temp.payload,message.data);
+	strncpy(temp.payload,message.data,20);
 	tolayer3(A,temp);
 	
 	if(seqNum == min) starttimer(A,timeout);
@@ -105,7 +105,7 @@ void A_input(packet)
 {
 	int ackNumPacket = packet.acknum;
 	int tempChecksum = checksum_init(packet);
-	if(tempChecksum != packet.checksum || ackNumPacket < min || ackNumPacket >= winSize) return; 
+	if(tempChecksum != packet.checksum || ackNumPacket < min || ackNumPacket >= min + winSize) return; 
 	
 	timer[ackNumPacket] = 0;
 	ackSend[ackNumPacket] = 1;
@@ -121,11 +121,11 @@ void A_input(packet)
 		struct pkt temp;
 		memset(&temp,0,sizeof(temp));
 		struct msg message = buffer[i];
-		temp.checksum = temp.seqnum + seqNum;
+		temp.checksum = temp.acknum + seqNum;
 		temp.seqnum = seqNum;
 		for(int n = 0 ; n < 20 ; n++) temp.checksum += (int) message.data[n];
 
-		strcpy(temp.payload,message.data);
+		strncpy(temp.payload,message.data,20);
 		tolayer3(A,temp);
 
 		if(min == seqNum) starttimer(A,timeout);
@@ -152,7 +152,7 @@ void A_timerinterrupt()
 	for(int n = min ; n < seqNum ; n++){
 		if(ackSend[n] == 0 && get_sim_time() == timer[n]){
 			tolayer3(A,bufferSend[n]);
-			timer[i] = get_sim_time() + timeout;
+			timer[n] = get_sim_time() + timeout;
 			break;
 		}
 	}
@@ -198,13 +198,13 @@ void B_input(packet)
 	struct pkt temp;
 	memset(&temp,0,sizeof(temp));
 	
-	temp.seqnum = packet.seqnum;
+	temp.seqnum = seqNumPacket;
 	temp.checksum = checksum_init(temp);
 	tolayer3(B,temp);
 
-	if(packet.seqnum != packEx){
-		bufferReach[packet.seqnum] = packet;
-		isValidBuffer[packet.seqnum] = 1;
+	if(seqNumPacket != packEx){
+		bufferReach[seqNumPacket] = packet;
+		isValidBuffer[seqNumPacket] = 1;
 	}
 	else{
 		int temp = packEx + winSize;
