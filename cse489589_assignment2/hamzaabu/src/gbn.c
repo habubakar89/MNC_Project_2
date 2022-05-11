@@ -25,8 +25,8 @@
 
 /********* STUDENTS WRITE THE NEXT SEVEN ROUTINES *********/
 
-struct msg buffer[1000];
-struct pkt retransmit[1000]; //Buffer of struct pkt instead of msg because we need seqnum and acknum
+struct msg buffer[1500];
+struct pkt retransmit[1500]; //Buffer of struct pkt instead of msg because we need seqnum and acknum
 int begin;
 int end;
 int base;
@@ -71,7 +71,7 @@ void A_output(message)
 		//Note that if we are sending the first packet in the window, then we must start a countdown
 		//as demonstrated by the behavior in the GBN applet found in https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/
 		if (base == seq_num) {
-			starttimer(0, 50);
+			starttimer(0, 20);
 		}
 		retransmit[seq_num] = packet;
 		seq_num++;
@@ -105,7 +105,7 @@ void A_input(packet)
 		buffered_packet.checksum = packet_checksum;
 		tolayer3(0, buffered_packet);
 		if (base == seq_num) {
-			starttimer(0, 50);
+			starttimer(0, 20);
 		}
 		retransmit[seq_num] = buffered_packet;
 		begin++;
@@ -115,14 +115,14 @@ void A_input(packet)
 		stoptimer(0);
 	}
 	else {
-		starttimer(0, 50);
+		starttimer(0, 20);
 	}
 }
 
 /* called when A's timer goes off */
 void A_timerinterrupt()
 {
-	starttimer(0, 50);
+	starttimer(0, 20);
 	for (int i = base; i < seq_num; i++) {
 		tolayer3(0, retransmit[i]);
 	}
