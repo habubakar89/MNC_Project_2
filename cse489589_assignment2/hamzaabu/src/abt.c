@@ -113,10 +113,10 @@ void A_input(packet)
 
 
 		//temp.checksum = checksum_init(temp);
-		temp.checksum = seqNum + packet.acknum;
+		temp.checksum = seqNum + temp.acknum;
 		temp.seqnum = seqNum;
-		struct msg message = buffer[i];
-		for(int n = 0 ; n < 20 ; n++) temp.checksum += (int) message.data[i];
+		//struct msg message = buffer[i];
+		for(int n = 0 ; n < 20 ; n++) temp.checksum += (int) messageTemp.data[i];
 		stateA = 1;
 		strncpy(temp.payload,messageTemp.data,20);
 		starttimer(A,timeout);
@@ -163,9 +163,9 @@ void B_input(packet)
 		struct pkt temp;
 		memset(&temp,0,sizeof(temp));
 		temp.acknum = packet.seqnum;
-		//temp.checksum = checksum_init(temp);
-		temp.checksum = temp.seqnum + temp.acknum;
-		for(int n = 0 ; n < 20 ; n++) temp.checksum += (int) temp.payload[n];
+		temp.checksum = checksum_init(temp);
+		//temp.checksum = temp.seqnum + temp.acknum;
+		//for(int n = 0 ; n < 20 ; n++) temp.checksum += (int) temp.payload[n];
 		tolayer3(B,temp);
 		
 		if(packet.seqnum == stateB){
