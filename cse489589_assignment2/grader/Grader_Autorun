@@ -31,33 +31,33 @@ Exp_2_LossProbs[0]=0.2
 Exp_2_LossProbs[1]=0.5
 Exp_2_LossProbs[2]=0.8
 
-cd /home/csgrad/ashiqmoh/MNC/cse489589_assignment2/grader
+cd /local/Spring_2022/hamzaabu/cse489589_assignment2/grader
 
-# Experiment 1
-#for ((Protocol_Index=0; Protocol_Index<3; Protocol_Index++)) 
-#do
-#  for ((WindowSize_Index=0; WindowSize_Index<2; WindowSize_Index++))
-#  do
-#    for ((LossProbs_Index=0; LossProbs_Index<5; LossProbs_Index++))
-#    do
-#      OutputFileName="../ashiqmoh/Exp_1_"${Protocols[${Protocol_Index}]}_${Exp_1_WindowSizes[${WindowSize_Index}]}_${Exp_1_LossProbs[${LossProbs_Index}]}.csv
-#      ./run_experiments -m ${Messages} -l ${Exp_1_LossProbs[${LossProbs_Index}]} -c ${Corruption} -t ${Timer} -w ${Exp_1_WindowSizes[${WindowSize_Index}]} -p ../ashiqmoh/${Protocols[${Protocol_Index}]} -o ${OutputFileName}
-#    done
-#  done
-#done
-
-
-for ((Protocol_Index=0; Protocol_Index<2; Protocol_Index++)) 
+#Experiment 1
+for ((Protocol_Index=0; Protocol_Index<3; Protocol_Index++)) 
 do
-  for ((WindowSize_Index=0; WindowSize_Index<5; WindowSize_Index++))
+  for ((WindowSize_Index=0; WindowSize_Index<2; WindowSize_Index++))
   do
-    for ((LossProbs_Index=0; LossProbs_Index<3; LossProbs_Index++))
+    for ((LossProbs_Index=0; LossProbs_Index<5; LossProbs_Index++))
     do
-      OutputFileName="../ashiqmoh/Exp_2_"${Protocols[${Protocol_Index}]}_${Exp_2_WindowSizes[${WindowSize_Index}]}_${Exp_2_LossProbs[${LossProbs_Index}]}.csv
-      ./run_experiments -m ${Messages} -l ${Exp_2_LossProbs[${LossProbs_Index}]} -c ${Corruption} -t ${Timer} -w ${Exp_2_WindowSizes[${WindowSize_Index}]} -p ../ashiqmoh/${Protocols[${Protocol_Index}]} -o ${OutputFileName}
-      echo ${OutputFileName}
+      OutputFileName="../hamzaabu/Exp_1_"${Protocols[${Protocol_Index}]}_${Exp_1_WindowSizes[${WindowSize_Index}]}_${Exp_1_LossProbs[${LossProbs_Index}]}.csv
+      ./run_experiments -m ${Messages} -l ${Exp_1_LossProbs[${LossProbs_Index}]} -c ${Corruption} -t ${Timer} -w ${Exp_1_WindowSizes[${WindowSize_Index}]} -p ../hamzaabu/${Protocols[${Protocol_Index}]} -o ${OutputFileName}
     done
   done
 done
+
+
+#for ((Protocol_Index=0; Protocol_Index<2; Protocol_Index++)) 
+#do
+#  for ((WindowSize_Index=0; WindowSize_Index<5; WindowSize_Index++))
+#  do
+#    for ((LossProbs_Index=0; LossProbs_Index<3; LossProbs_Index++))
+#    do
+#      OutputFileName="../hamzaabu/Exp_2_"${Protocols[${Protocol_Index}]}_${Exp_2_WindowSizes[${WindowSize_Index}]}_${Exp_2_LossProbs[${LossProbs_Index}]}.csv
+#      ./run_experiments -m ${Messages} -l ${Exp_2_LossProbs[${LossProbs_Index}]} -c ${Corruption} -t ${Timer} -w ${Exp_2_WindowSizes[${WindowSize_Index}]} -p ../hamzaabu/${Protocols[${Protocol_Index}]} -o ${OutputFileName}
+#      echo ${OutputFileName}
+#    done
+#  done
+#done
 
 
