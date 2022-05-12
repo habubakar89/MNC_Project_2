@@ -1,6 +1,6 @@
 declare -A Protocols
-Protocols[0]=sr
-Protocols[1]=gbn
+Protocols[0]=abt
+
 
 Corruption=0.2
 Messages=1000
@@ -33,23 +33,26 @@ Exp_2_LossProbs[2]=0.8
 
 cd /local/Spring_2022/hamzaabu/cse489589_assignment2/grader
 
+Protocol_Index=0;
+WindowSize_Index=50;
+
 #Experiment 1
-for ((Protocol_Index=0; Protocol_Index<3; Protocol_Index++)) 
-do
-  for ((WindowSize_Index=0; WindowSize_Index<2; WindowSize_Index++))
-  do
+#for ((Protocol_Index=0; Protocol_Index<1; Protocol_Index++)) 
+#do
+#  for ((WindowSize_Index=0; WindowSize_Index<1; WindowSize_Index++))
+#  do
     for ((LossProbs_Index=0; LossProbs_Index<5; LossProbs_Index++))
     do
       OutputFileName="../hamzaabu/Exp_1_"${Protocols[${Protocol_Index}]}_${Exp_1_WindowSizes[${WindowSize_Index}]}_${Exp_1_LossProbs[${LossProbs_Index}]}.csv
       ./run_experiments -m ${Messages} -l ${Exp_1_LossProbs[${LossProbs_Index}]} -c ${Corruption} -t ${Timer} -w ${Exp_1_WindowSizes[${WindowSize_Index}]} -p ../hamzaabu/${Protocols[${Protocol_Index}]} -o ${OutputFileName}
     done
-  done
-done
+#  done
+#done
 
 
-#for ((Protocol_Index=0; Protocol_Index<2; Protocol_Index++)) 
+#for ((Protocol_Index=0; Protocol_Index<1; Protocol_Index++)) 
 #do
-#  for ((WindowSize_Index=0; WindowSize_Index<5; WindowSize_Index++))
+#  for ((WindowSize_Index=0; WindowSize_Index<1; WindowSize_Index++))
 #  do
 #    for ((LossProbs_Index=0; LossProbs_Index<3; LossProbs_Index++))
 #    do

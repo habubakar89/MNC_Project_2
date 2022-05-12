@@ -25,13 +25,16 @@
 
 /********* STUDENTS WRITE THE NEXT SEVEN ROUTINES *********/
 
+#define A 0
+#define B 1
+
 struct msg buffer[1500];
 struct pkt retransmit[1500]; //Buffer of struct pkt instead of msg because we need seqnum and acknum
-int begin;
-int end;
-int base;
-int seq_num;
-int expected_pkt;
+int i,j;
+int min;
+int timeout;
+int seqNum;
+int packEx;
 /*Function Definition*/
 int checksum_init(struct pkt packet);
 
@@ -59,26 +62,25 @@ int checksum_init(struct pkt packet){
 void A_output(message)
   struct msg message;
 {
-	if (seq_num < base + getwinsize()) {
-		struct pkt packet;
-		memset(&packet, 0, sizeof(packet));
-		int packet_checksum = 0;
-		packet.seqnum = seq_num;
-		strncpy(packet.payload, message.data, 20);
-		packet_checksum = checksum_init(packet);
-		packet.checksum = packet_checksum;
-		tolayer3(0, packet);
+	if (seqNum < min + getwinsize()) {
+		struct pkt temp;
+		memset(&temp, 0, sizeof(temp));
+		
+		temp.seqnum = seqNum;
+		strncpy(temp.payload, message.data, 20);
+		int temp_checksum = checksum_init(temp);
+		temp.checksum = temp_checksum;
+		tolayer3(A, temp);
 		//Note that if we are sending the first packet in the window, then we must start a countdown
 		//as demonstrated by the behavior in the GBN applet found in https://www2.tkn.tu-berlin.de/teaching/rn/animations/gbn_sr/
-		if (base == seq_num) {
-			starttimer(0, 20);
-		}
-		retransmit[seq_num] = packet;
-		seq_num++;
+		if (seqNum == min) starttimer(A, timeout);
+		
+		retransmit[seqNum] = temp;
+		seqNum++;
 		return;
 	}
-	buffer[end] = message;
-	end++;
+	buffer[j++] = message;
+	
 	return;
 }
 
@@ -86,46 +88,37 @@ void A_output(message)
 void A_input(packet)
   struct pkt packet;
 {
-	int expected_checksum = 0;
-	expected_checksum = checksum_init(packet);
-	if (expected_checksum != packet.checksum) {
-		return;
-	}
 	
-	base = packet.acknum + 1;
+	int checkSum = checksum_init(packet);
+	if (checkSum != packet.checksum) return;
 	
-	while (seq_num < base + getwinsize() && begin < end) {
+	min = packet.acknum + 1;
+	
+	while (seqNum < min + getwinsize() && i < j) {
 		
-		struct pkt buffered_packet;
-		memset(&buffered_packet, 0, sizeof(buffered_packet));
-		int packet_checksum = 0;
-		buffered_packet.seqnum = seq_num;
-		strncpy(buffered_packet.payload, buffer[begin].data, 20);
-		packet_checksum = checksum_init(buffered_packet);
-		buffered_packet.checksum = packet_checksum;
-		tolayer3(0, buffered_packet);
-		if (base == seq_num) {
-			starttimer(0, 20);
-		}
-		retransmit[seq_num] = buffered_packet;
-		begin++;
-		seq_num++;
+		struct pkt temp;
+		memset(&temp, 0, sizeof(temp));
+		
+		temp.seqnum = seqNum;
+		strncpy(temp.payload, buffer[i].data, 20);
+		
+		temp.checksum = checksum_init(temp);
+		tolayer3(A, temp);
+		if (min == seqNum) starttimer(A, timeout);
+		
+		retransmit[seqNum] = temp;
+		i++;
+		seqNum++;
 	}
-	if (base == seq_num) {
-		stoptimer(0);
-	}
-	else {
-		starttimer(0, 20);
-	}
+	if (min == seqNum) stoptimer(A);
+	else starttimer(A, timeout);
 }
 
 /* called when A's timer goes off */
 void A_timerinterrupt()
 {
-	starttimer(0, 20);
-	for (int i = base; i < seq_num; i++) {
-		tolayer3(0, retransmit[i]);
-	}
+	starttimer(A, timeout);
+	for (int i = min; i < seqNum; i++) tolayer3(A, retransmit[i]);
 	return;
 }  
 
@@ -135,10 +128,11 @@ void A_init()
 {
 	memset(&buffer, 0, sizeof(buffer));
 	memset(&retransmit, 0, sizeof(retransmit));
-	begin = 0;
-	end = 0;
-	base = 0;
-	seq_num = 0;
+	i = 0;
+	j = 0;
+	min = 0;
+	seqNum = 0;
+	timeout=20;
 	return;
 }
 
@@ -148,27 +142,31 @@ void A_init()
 void B_input(packet)
   struct pkt packet;
 {
-	int expected_checksum = 0;
-	expected_checksum = checksum_init(packet);
-	if (expected_checksum != packet.checksum) {
-		return;
-	}
+	
+	int checkSum = checksum_init(packet);
+	if (checkSum != packet.checksum) return;
 
-	if (packet.seqnum == expected_pkt) {
-		struct pkt ack;
-		memset(&ack, 0, sizeof(ack));
-		ack.acknum = seq_num;
-		ack.checksum = checksum_init(ack);
-		tolayer3(1, ack);
-		tolayer5(1, packet.payload);
-		expected_pkt++;
+	if (packet.seqnum == packEx) {
+	
+		struct pkt temp;
+		memset(&temp, 0, sizeof(temp));
+	
+		temp.acknum = seqNum;
+		temp.checksum = checksum_init(temp);
+	
+		tolayer3(B, temp);
+		tolayer5(B, packet.payload);
+	
+		packEx++;
 	}
-	else if (expected_pkt != 0) {
-		struct pkt ack;
-		memset(&ack, 0, sizeof(ack));
-		ack.acknum = seq_num - 1;
-		ack.checksum = checksum_init(ack);
-		tolayer3(1, ack);
+	else if (packEx != 0) {
+		
+		struct pkt temp;
+		memset(&temp, 0, sizeof(temp));
+		
+		temp.acknum = seqNum - 1;
+		temp.checksum = checksum_init(temp);
+		tolayer3(B, temp);
 	}
 	return;
 }
@@ -177,6 +175,7 @@ void B_input(packet)
 /* entity B routines are called. You can use it to do any initialization */
 void B_init()
 {
-	expected_pkt = 0;
+	packEx = 0;
+	timeout=20;
 	return;
 }
